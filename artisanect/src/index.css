@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #faf6ef;
+  color: #22324a;
+  font-family: "Inter", sans-serif;
+  overflow-x: hidden;
+}
+
+/* Stitched dashed divider used as a recurring "hand-sewn" motif across the site */
+.stitch-divider {
+  border-top: 2px dashed rgba(34, 50, 74, 0.25);
+}
+
+.stitch-divider-light {
+  border-top: 2px dashed rgba(250, 246, 239, 0.35);
+}
+
+/* Rotated "handmade" stamp badge used on product cards */
+.handmade-stamp {
+  transform: rotate(-8deg);
+}
