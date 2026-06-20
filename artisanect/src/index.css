@@ -7,10 +7,10 @@ html {
 }
 
 body {
-  background-color: #faf6ef;
-  color: #22324a;
+  @apply bg-paper text-ink dark:bg-ink dark:text-paper;
   font-family: "Inter", sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Stitched dashed divider used as a recurring "hand-sewn" motif across the site */

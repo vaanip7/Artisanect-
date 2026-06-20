@@ -1,8 +1,16 @@
 import React from "react";
 
+/**
+ * Hero
+ * Full-width landing banner for the Home page, featuring the main
+ * headline, subheading, and a call-to-action that scrolls to the
+ * featured products section.
+ *
+ * @returns {JSX.Element}
+ */
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-ink">
+    <section className="relative overflow-hidden bg-ink dark:bg-ink-dark transition-colors duration-300">
       {/* subtle background image */}
       <div className="absolute inset-0">
         <img
@@ -10,7 +18,7 @@ function Hero() {
           alt="Artisan weaving handicraft"
           className="w-full h-full object-cover opacity-25"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink via-ink/95 to-ink"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-ink via-ink/95 to-ink dark:to-ink-dark"></div>
       </div>
 
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-28 flex flex-col items-start gap-6">

@@ -23,16 +23,23 @@ const stats = [
   },
 ];
 
+/**
+ * Dashboard
+ * Artisan-facing dashboard showing placeholder stat cards (products,
+ * orders, revenue) and a placeholder area for upcoming analytics.
+ *
+ * @returns {JSX.Element}
+ */
 function Dashboard() {
   return (
     <>
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 bg-paper dark:bg-ink transition-colors duration-300">
         <section className="max-w-6xl mx-auto px-5 sm:px-8 py-14 sm:py-20">
           <span className="text-xs font-semibold uppercase tracking-widest text-clay">
             Seller Overview
           </span>
-          <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink mt-2 mb-10">
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-ink dark:text-paper mt-2 mb-10">
             Artisan Dashboard
           </h1>
 
@@ -40,21 +47,21 @@ function Dashboard() {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="bg-white border border-ink/10 rounded-xl p-6 flex flex-col gap-3 shadow-sm"
+                className="bg-white dark:bg-ink-light border border-ink/10 dark:border-paper/10 rounded-xl p-6 flex flex-col gap-3 shadow-sm transition-colors duration-300"
               >
-                <div className="w-10 h-10 rounded-lg bg-clay/10 flex items-center justify-center text-clay">
+                <div className="w-10 h-10 rounded-lg bg-clay/10 dark:bg-clay/20 flex items-center justify-center text-clay">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-ink/60">{stat.label}</p>
-                <p className="font-display font-bold text-3xl text-ink">{stat.value}</p>
-                <p className="text-xs text-ink/50">{stat.helper}</p>
+                <p className="text-sm font-medium text-ink/60 dark:text-paper/60">{stat.label}</p>
+                <p className="font-display font-bold text-3xl text-ink dark:text-paper">{stat.value}</p>
+                <p className="text-xs text-ink/50 dark:text-paper/50">{stat.helper}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-10 border-2 border-dashed border-ink/15 rounded-xl p-10 text-center text-ink/50 text-sm">
+          <div className="mt-10 border-2 border-dashed border-ink/15 dark:border-paper/20 rounded-xl p-10 text-center text-ink/50 dark:text-paper/50 text-sm">
             Recent orders and product analytics will appear here.
           </div>
         </section>

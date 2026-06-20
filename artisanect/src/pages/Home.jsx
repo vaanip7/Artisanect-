@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar.jsx";
 import Hero from "../components/Hero.jsx";
 import Card from "../components/Card.jsx";
 import Footer from "../components/Footer.jsx";
+import DevicePreview from "../components/DevicePreview.jsx";
 
 const products = [
   {
@@ -31,11 +32,19 @@ const products = [
   },
 ];
 
+/**
+ * Home
+ * Landing page: Navbar, Hero banner, a responsive grid of featured
+ * artisan product cards, and the Footer. Also mounts the DevicePreview
+ * QA toggle for visually testing responsive breakpoints.
+ *
+ * @returns {JSX.Element}
+ */
 function Home() {
   return (
     <>
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 bg-paper dark:bg-ink transition-colors duration-300">
         <Hero />
 
         <section id="products" className="max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
@@ -43,10 +52,10 @@ function Home() {
             <span className="text-xs font-semibold uppercase tracking-widest text-clay">
               Curated Crafts
             </span>
-            <h2 className="font-display font-bold text-2xl sm:text-3xl text-ink mt-2">
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-ink dark:text-paper mt-2">
               Featured Artisan Products
             </h2>
-            <p className="text-ink/65 mt-3 text-sm sm:text-base">
+            <p className="text-ink/65 dark:text-paper/65 mt-3 text-sm sm:text-base">
               Every piece is made by hand and tells a story of skill passed down through generations.
             </p>
           </div>
@@ -65,6 +74,7 @@ function Home() {
         </section>
       </main>
       <Footer />
+      <DevicePreview />
     </>
   );
 }

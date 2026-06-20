@@ -24,9 +24,18 @@ const socialIcons = [
   },
 ];
 
+/**
+ * Footer
+ * Site-wide footer with brand summary, quick links, social icons, and
+ * a copyright line. Intentionally kept on a dark band in both themes,
+ * using a slightly deeper shade in dark mode to preserve contrast
+ * against the rest of the page.
+ *
+ * @returns {JSX.Element}
+ */
 function Footer() {
   return (
-    <footer className="mt-auto bg-ink text-paper">
+    <footer className="mt-auto bg-ink dark:bg-ink-dark text-paper transition-colors duration-300">
       <div className="stitch-divider-light"></div>
 
       <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8">

@@ -14,6 +14,20 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Applied before React mounts to avoid a flash of the wrong theme on refresh.
+      (function () {
+        try {
+          var stored = localStorage.getItem("artisanect-theme");
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (stored === "dark" || (!stored && prefersDark)) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {
+          /* localStorage unavailable; default to light theme */
+        }
+      })();
+    </script>
   </head>
   <body class="overflow-x-hidden">
     <div id="root"></div>
