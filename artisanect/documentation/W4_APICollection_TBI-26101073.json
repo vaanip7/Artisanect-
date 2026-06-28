@@ -1,0 +1,359 @@
+{
+  "info": {
+    "_postman_id": "a1e3f4b2-7c6d-4e5a-9b1f-2d8c6e4a0f31",
+    "name": "Artisanect API",
+    "description": "Full REST API for the Artisanect marketplace backend (Week 4): products, cart, crafter products, and dummy auth.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"title\": \"Madhubani Painting\",\n      \"category\": \"Painting\",\n      \"artisanName\": \"Sita Devi\",\n      \"price\": 1499,\n      \"rating\": 4.8,\n      \"stock\": 12,\n      \"description\": \"Vibrant folk art from Bihar, hand-painted with natural dyes depicting nature, mythology, and everyday life.\",\n      \"image\": \"https://images.unsplash.com/photo-1582561833832-fc1c91d8cab1\",\n      \"featured\": true,\n      \"tags\": [\"folk-art\", \"painting\", \"bihar\"],\n      \"crafterId\": \"demo-artisan\"\n    },\n    {\n      \"id\": 5,\n      \"title\": \"Handmade Pottery\",\n      \"category\": \"Pottery\",\n      \"artisanName\": \"Ramesh Prajapati\",\n      \"price\": 649,\n      \"rating\": 4.4,\n      \"stock\": 15,\n      \"description\": \"Traditional clay pottery shaped on a hand-spun wheel and fired in a wood kiln.\",\n      \"image\": \"https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261\",\n      \"featured\": true,\n      \"tags\": [\"pottery\", \"clay\"],\n      \"crafterId\": \"demo-artisan\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Categories",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/categories", "host": ["{{baseUrl}}"], "path": ["api", "products", "categories"] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/categories", "host": ["{{baseUrl}}"], "path": ["api", "products", "categories"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": [\"Home Decor\", \"Jewellery\", \"Leather\", \"Painting\", \"Pottery\", \"Textile\", \"Wellness\", \"Wood Carving\"]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Filter Products by Category",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products?category=Pottery", "host": ["{{baseUrl}}"], "path": ["api", "products"], "query": [{ "key": "category", "value": "Pottery" }] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products?category=Pottery", "host": ["{{baseUrl}}"], "path": ["api", "products"], "query": [{ "key": "category", "value": "Pottery" }] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    { \"id\": 5, \"title\": \"Handmade Pottery\", \"category\": \"Pottery\" },\n    { \"id\": 10, \"title\": \"Clay Mug\", \"category\": \"Pottery\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Search Products",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/search?q=leather", "host": ["{{baseUrl}}"], "path": ["api", "products", "search"], "query": [{ "key": "q", "value": "leather" }] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/search?q=leather", "host": ["{{baseUrl}}"], "path": ["api", "products", "search"], "query": [{ "key": "q", "value": "leather" }] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    { \"id\": 15, \"title\": \"Leather Wallet\", \"category\": \"Leather\", \"artisanName\": \"Imran Khan\", \"price\": 1199 }\n  ]\n}"
+            },
+            {
+              "name": "400 Bad Request (missing q)",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/search", "host": ["{{baseUrl}}"], "path": ["api", "products", "search"] } },
+              "status": "Bad Request", "code": 400, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Query parameter 'q' is required.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Single Product",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/3", "host": ["{{baseUrl}}"], "path": ["api", "products", "3"] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/3", "host": ["{{baseUrl}}"], "path": ["api", "products", "3"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": 3,\n    \"title\": \"Wooden Handicraft\",\n    \"category\": \"Wood Carving\",\n    \"artisanName\": \"Manoj Kumar\",\n    \"price\": 1299,\n    \"rating\": 4.7,\n    \"stock\": 8,\n    \"description\": \"Intricately carved wooden decor and figurines, showcasing generations of traditional craftsmanship.\",\n    \"featured\": true\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/products/9999", "host": ["{{baseUrl}}"], "path": ["api", "products", "9999"] } },
+              "status": "Not Found", "code": 404, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Product with id 9999 not found.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Bamboo Lamp\",\n  \"category\": \"Home Decor\",\n  \"artisanName\": \"Demo Crafter\",\n  \"price\": 799,\n  \"description\": \"Hand-woven bamboo lamp shade.\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Bamboo Lamp\",\n  \"category\": \"Home Decor\",\n  \"price\": 799\n}" }, "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] } },
+              "status": "Created", "code": 201, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": 17,\n    \"rating\": 0,\n    \"stock\": 0,\n    \"featured\": false,\n    \"tags\": [],\n    \"crafterId\": \"demo-crafter\",\n    \"title\": \"Bamboo Lamp\",\n    \"category\": \"Home Decor\",\n    \"price\": 799\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request (missing fields)",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" }, "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] } },
+              "status": "Bad Request", "code": 400, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Fields 'title', 'category', and 'price' are required.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 1550\n}" },
+            "url": { "raw": "{{baseUrl}}/api/products/1", "host": ["{{baseUrl}}"], "path": ["api", "products", "1"] }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"price\": 1550\n}" }, "url": { "raw": "{{baseUrl}}/api/products/1", "host": ["{{baseUrl}}"], "path": ["api", "products", "1"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 1, \"title\": \"Madhubani Painting\", \"price\": 1550 }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"price\": 1\n}" }, "url": { "raw": "{{baseUrl}}/api/products/9999", "host": ["{{baseUrl}}"], "path": ["api", "products", "9999"] } },
+              "status": "Not Found", "code": 404, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Product with id 9999 not found.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Product",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/products/17", "host": ["{{baseUrl}}"], "path": ["api", "products", "17"] } },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/products/17", "host": ["{{baseUrl}}"], "path": ["api", "products", "17"] } },
+              "status": "No Content", "code": 204, "_postman_previewlanguage": "json", "header": [], "cookie": [], "body": ""
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/products/17", "host": ["{{baseUrl}}"], "path": ["api", "products", "17"] } },
+              "status": "Not Found", "code": 404, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Product with id 17 not found.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/cart", "host": ["{{baseUrl}}"], "path": ["api", "cart"] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/cart", "host": ["{{baseUrl}}"], "path": ["api", "cart"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    { \"productId\": 1, \"title\": \"Madhubani Painting\", \"price\": 1499, \"quantity\": 2 }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"productId\": 1,\n  \"title\": \"Madhubani Painting\",\n  \"price\": 1499,\n  \"image\": \"https://images.unsplash.com/photo-1582561833832-fc1c91d8cab1\",\n  \"quantity\": 2\n}" },
+            "url": { "raw": "{{baseUrl}}/api/cart", "host": ["{{baseUrl}}"], "path": ["api", "cart"] }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"productId\": 1,\n  \"title\": \"Madhubani Painting\",\n  \"price\": 1499,\n  \"quantity\": 2\n}" }, "url": { "raw": "{{baseUrl}}/api/cart", "host": ["{{baseUrl}}"], "path": ["api", "cart"] } },
+              "status": "Created", "code": 201, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": { \"productId\": 1, \"title\": \"Madhubani Painting\", \"price\": 1499, \"quantity\": 2 }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 5\n}" },
+            "url": { "raw": "{{baseUrl}}/api/cart/1", "host": ["{{baseUrl}}"], "path": ["api", "cart", "1"] }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"quantity\": 5\n}" }, "url": { "raw": "{{baseUrl}}/api/cart/1", "host": ["{{baseUrl}}"], "path": ["api", "cart", "1"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": { \"productId\": 1, \"title\": \"Madhubani Painting\", \"price\": 1499, \"quantity\": 5 }\n}"
+            },
+            {
+              "name": "400 Bad Request (invalid quantity)",
+              "originalRequest": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"quantity\": 0\n}" }, "url": { "raw": "{{baseUrl}}/api/cart/1", "host": ["{{baseUrl}}"], "path": ["api", "cart", "1"] } },
+              "status": "Bad Request", "code": 400, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Quantity must be a positive number.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove from Cart",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/cart/1", "host": ["{{baseUrl}}"], "path": ["api", "cart", "1"] } },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/cart/1", "host": ["{{baseUrl}}"], "path": ["api", "cart", "1"] } },
+              "status": "No Content", "code": 204, "_postman_previewlanguage": "json", "header": [], "cookie": [], "body": ""
+            },
+            {
+              "name": "404 Not Found",
+              "originalRequest": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/api/cart/1", "host": ["{{baseUrl}}"], "path": ["api", "cart", "1"] } },
+              "status": "Not Found", "code": 404, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Cart item with productId 1 not found.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Crafters",
+      "item": [
+        {
+          "name": "Get Crafter Products",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/crafters/products", "host": ["{{baseUrl}}"], "path": ["api", "crafters", "products"] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/crafters/products", "host": ["{{baseUrl}}"], "path": ["api", "crafters", "products"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    { \"id\": 17, \"title\": \"Bamboo Lamp\", \"category\": \"Home Decor\", \"price\": 799, \"crafterId\": \"demo-crafter\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Crafter Product",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Bamboo Lamp\",\n  \"category\": \"Home Decor\",\n  \"description\": \"Hand-woven bamboo lamp shade.\",\n  \"price\": 799,\n  \"quantity\": 10,\n  \"tags\": [\"bamboo\", \"lamp\"]\n}" },
+            "url": { "raw": "{{baseUrl}}/api/crafters/products", "host": ["{{baseUrl}}"], "path": ["api", "crafters", "products"] }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Bamboo Lamp\",\n  \"category\": \"Home Decor\",\n  \"price\": 799\n}" }, "url": { "raw": "{{baseUrl}}/api/crafters/products", "host": ["{{baseUrl}}"], "path": ["api", "crafters", "products"] } },
+              "status": "Created", "code": 201, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": { \"id\": 17, \"title\": \"Bamboo Lamp\", \"category\": \"Home Decor\", \"price\": 799, \"crafterId\": \"demo-crafter\", \"rating\": 0, \"stock\": 0, \"featured\": false }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login as Customer",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"customer\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"customer\"\n}" }, "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"token\": \"dummy-token-customer\",\n    \"profile\": { \"name\": \"Asha Mehta\", \"role\": \"customer\", \"email\": \"asha.mehta@example.com\", \"joined\": \"2026-02-14\" }\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request (invalid role)",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"admin\"\n}" }, "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] } },
+              "status": "Bad Request", "code": 400, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Role must be 'customer' or 'crafter'.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as Crafter",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"crafter\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"crafter\"\n}" }, "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api", "login"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"token\": \"dummy-token-crafter\",\n    \"profile\": { \"name\": \"Manoj Kumar\", \"role\": \"crafter\", \"email\": \"manoj.kumar@example.com\", \"craft\": \"Wood Carving\" }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Profile",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/profile?role=crafter", "host": ["{{baseUrl}}"], "path": ["api", "profile"], "query": [{ "key": "role", "value": "crafter" }] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/profile?role=crafter", "host": ["{{baseUrl}}"], "path": ["api", "profile"], "query": [{ "key": "role", "value": "crafter" }] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": { \"name\": \"Manoj Kumar\", \"role\": \"crafter\", \"email\": \"manoj.kumar@example.com\", \"craft\": \"Wood Carving\" }\n}"
+            },
+            {
+              "name": "404 Not Found (unknown role)",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/profile?role=bogus", "host": ["{{baseUrl}}"], "path": ["api", "profile"], "query": [{ "key": "role", "value": "bogus" }] } },
+              "status": "Not Found", "code": 404, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": false,\n  \"message\": \"No profile found for role 'bogus'.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Misc",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/stats", "host": ["{{baseUrl}}"], "path": ["api", "stats"] } },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/stats", "host": ["{{baseUrl}}"], "path": ["api", "stats"] } },
+              "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }], "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": { \"totalProducts\": 16, \"totalOrders\": 138, \"revenue\": 56400 }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

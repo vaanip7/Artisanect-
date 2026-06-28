@@ -1,31 +1,59 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import { useCart } from "../context/CartContext.jsx";
 
-const navLinks = [
+const guestLinks = [
   { name: "Home", path: "/" },
   { name: "About", path: "/about" },
-  { name: "Login", path: "/login" },
+  { name: "Shop", path: "/shop" },
+];
+
+const customerLinks = [
+  { name: "Home", path: "/" },
+  { name: "Shop", path: "/shop" },
+  { name: "Cart", path: "/cart" },
+  { name: "Wishlist", path: "/wishlist" },
+  { name: "Profile", path: "/profile" },
+];
+
+const crafterLinks = [
+  { name: "Home", path: "/" },
   { name: "Dashboard", path: "/dashboard" },
-  { name: "UI Kit", path: "/components-demo" },
+  { name: "Upload Product", path: "/crafter/upload" },
+  { name: "My Products", path: "/crafter/products" },
+  { name: "Orders", path: "/crafter/orders" },
+  { name: "Profile", path: "/profile" },
 ];
 
 /**
  * Navbar
- * Sticky site navigation with the Artisanect logo, a responsive mobile
- * menu, and a light/dark theme toggle button. Active routes are
- * highlighted via React Router's NavLink.
+ * Sticky site navigation. Shows a different link set depending on the
+ * current role from AuthContext (guest / customer / crafter), a cart
+ * item-count badge for customers, a light/dark theme toggle, login or
+ * logout, and a responsive mobile menu.
  *
  * @returns {JSX.Element}
  */
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { role, logout } = useAuth();
+  const { count } = useCart();
+  const navigate = useNavigate();
+
+  const navLinks = role === "customer" ? customerLinks : role === "crafter" ? crafterLinks : guestLinks;
 
   const linkClasses = ({ isActive }) =>
     `font-medium transition-colors hover:text-clay ${
       isActive ? "text-clay" : "text-ink dark:text-paper"
     }`;
+
+  function handleLogout() {
+    logout();
+    navigate("/");
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-paper/95 dark:bg-ink/95 backdrop-blur-sm border-b-2 border-dashed border-ink/15 dark:border-paper/15 transition-colors duration-300">
@@ -43,15 +71,37 @@ function Navbar() {
         {/* Desktop links */}
         <ul className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
-            <li key={link.path}>
+            <li key={link.path} className="relative">
               <NavLink to={link.path} className={linkClasses}>
                 {link.name}
               </NavLink>
+              {link.name === "Cart" && count > 0 && (
+                <span className="absolute -top-2 -right-3 bg-clay text-paper text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {count}
+                </span>
+              )}
             </li>
           ))}
         </ul>
 
         <div className="flex items-center gap-2">
+          {role ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="hidden sm:inline text-sm font-semibold text-ink/70 dark:text-paper/70 hover:text-clay transition-colors"
+            >
+              Log out
+            </button>
+          ) : (
+            <NavLink
+              to="/login"
+              className="hidden sm:inline text-sm font-semibold text-ink dark:text-paper hover:text-clay transition-colors"
+            >
+              Login
+            </NavLink>
+          )}
+
           {/* Theme toggle */}
           <button
             type="button"
@@ -101,7 +151,7 @@ function Navbar() {
                   to={link.path}
                   onClick={() => setIsOpen(false)}
                   className={({ isActive }) =>
-                    `block w-full py-2.5 px-2 rounded-md font-medium ${
+                    `flex items-center justify-between w-full py-2.5 px-2 rounded-md font-medium ${
                       isActive
                         ? "text-clay bg-clay/10"
                         : "text-ink dark:text-paper hover:bg-ink/5 dark:hover:bg-paper/10"
@@ -109,9 +159,36 @@ function Navbar() {
                   }
                 >
                   {link.name}
+                  {link.name === "Cart" && count > 0 && (
+                    <span className="bg-clay text-paper text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                      {count}
+                    </span>
+                  )}
                 </NavLink>
               </li>
             ))}
+            <li>
+              {role ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleLogout();
+                  }}
+                  className="block w-full text-left py-2.5 px-2 rounded-md font-medium text-ink dark:text-paper hover:bg-ink/5 dark:hover:bg-paper/10"
+                >
+                  Log out
+                </button>
+              ) : (
+                <NavLink
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="block w-full py-2.5 px-2 rounded-md font-medium text-ink dark:text-paper hover:bg-ink/5 dark:hover:bg-paper/10"
+                >
+                  Login
+                </NavLink>
+              )}
+            </li>
           </ul>
         </div>
       )}

@@ -22,6 +22,7 @@ export default {
         gold: {
           DEFAULT: "#D6A23C",
           light: "#EFC978",
+          dark: "#A87A22",
         },
       },
       fontFamily: {

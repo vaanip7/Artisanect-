@@ -1,9 +1,11 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const footerLinks = [
-  { name: "About", path: "/about" },
-  { name: "Contact", path: "#contact" },
-  { name: "Privacy Policy", path: "#privacy" },
+  { name: "About", path: "/about", internal: true },
+  { name: "Components", path: "/components-demo", internal: true },
+  { name: "Contact", path: "#contact", internal: false },
+  { name: "Privacy Policy", path: "#privacy", internal: false },
 ];
 
 const socialIcons = [
@@ -60,9 +62,15 @@ function Footer() {
           <ul className="flex flex-col gap-2">
             {footerLinks.map((link) => (
               <li key={link.name}>
-                <a href={link.path} className="text-sm text-paper/75 hover:text-paper transition-colors">
-                  {link.name}
-                </a>
+                {link.internal ? (
+                  <Link to={link.path} className="text-sm text-paper/75 hover:text-paper transition-colors">
+                    {link.name}
+                  </Link>
+                ) : (
+                  <a href={link.path} className="text-sm text-paper/75 hover:text-paper transition-colors">
+                    {link.name}
+                  </a>
+                )}
               </li>
             ))}
           </ul>
