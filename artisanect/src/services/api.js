@@ -1,117 +1,199 @@
 /**
- * Centralised API service layer.
- * Every network call in the app goes through this file — no component or
- * context should call `fetch` directly. Keeping it in one place avoids
- * duplicated request logic and makes the base URL easy to change.
+ * api.js — centralised HTTP client for the Artisanect frontend
+ *
+ * All requests go through `request()` so we have one place to:
+ *  - attach the base URL
+ *  - inject the JWT Authorization header for authenticated routes
+ *  - normalise the response into { success, data } | { success, message }
+ *  - surface backend errors as thrown Error objects (so callers can catch them)
  */
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-/**
- * Thin fetch wrapper that throws a readable Error for non-2xx responses
- * so callers can catch it and show a Toast.
- */
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+// ─── Token helpers ────────────────────────────────────────────────────────────
+
+const TOKEN_KEY = "artisanect_token";
+
+export function getToken()          { return localStorage.getItem(TOKEN_KEY); }
+export function setToken(t)         { localStorage.setItem(TOKEN_KEY, t); }
+export function clearToken()        { localStorage.removeItem(TOKEN_KEY); }
+
+function authHeaders() {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// ─── Core request helper ──────────────────────────────────────────────────────
+
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
+  const url = `${BASE_URL}${path}`;
 
-  if (res.status === 204) return null;
+  const headers = {
+    "Content-Type": "application/json",
+    ...authHeaders(),
+    ...options.headers,
+  };
 
-  const body = await res.json().catch(() => ({}));
+  const res = await fetch(url, { ...options, headers });
+  const json = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(body.message || `Request failed with status ${res.status}`);
+    const message = json.message || `Request failed (${res.status})`;
+    const err = new Error(message);
+    err.status = res.status;
+    throw err;
   }
 
-  return body.data;
+  return json;
 }
 
-/* ---------------------------- Products ---------------------------- */
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
-/** Fetch all products. Optionally pass { category } to filter server-side. */
-export function fetchProducts({ category } = {}) {
-  const query = category ? `?category=${encodeURIComponent(category)}` : "";
-  return request(`/products${query}`);
+/**
+ * Login with real credentials. Returns { user, token }.
+ *
+ * @param {string} email
+ * @param {string} password
+ */
+export async function loginWithCredentials(email, password) {
+  const json = await request("/auth/login", {
+    method: "POST",
+    body:   JSON.stringify({ email, password }),
+  });
+  return json.data; // { user, token }
 }
 
-/** Fetch the distinct list of product categories. */
-export function fetchCategories() {
-  return request("/products/categories");
+/**
+ * Register a new account.
+ *
+ * @param {{ name, email, password, role, craft? }} data
+ */
+export async function registerUser(data) {
+  const json = await request("/auth/register", {
+    method: "POST",
+    body:   JSON.stringify(data),
+  });
+  return json.data; // { user, token }
 }
 
-/** Search products by free-text query. */
-export function searchProducts(q) {
-  return request(`/products/search?q=${encodeURIComponent(q)}`);
+/**
+ * Fetch the current user's profile (requires a valid JWT in localStorage).
+ */
+export async function fetchCurrentUser() {
+  const json = await request("/auth/me");
+  return json.data.user;
 }
 
-/** Fetch a single product by id. */
-export function fetchProductById(id) {
-  return request(`/products/${id}`);
+// ─── Products ─────────────────────────────────────────────────────────────────
+
+/**
+ * @param {{ category?: string, featured?: boolean }} params
+ */
+export async function fetchProducts(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.category) qs.set("category", params.category);
+  if (params.featured) qs.set("featured", "true");
+  const json = await request(`/products${qs.toString() ? "?" + qs : ""}`);
+  return json.data;
 }
 
-/** Create a new product (generic — used by admin-style flows). */
-export function createProduct(data) {
-  return request("/products", { method: "POST", body: JSON.stringify(data) });
+export async function fetchCategories() {
+  const json = await request("/products/categories");
+  return json.data;
 }
 
-/** Update an existing product. */
-export function updateProduct(id, data) {
-  return request(`/products/${id}`, { method: "PUT", body: JSON.stringify(data) });
+export async function fetchProductById(id) {
+  const json = await request(`/products/${id}`);
+  return json.data;
 }
 
-/** Delete a product. */
-export function deleteProduct(id) {
+export async function searchProducts(query) {
+  const json = await request(`/products/search?q=${encodeURIComponent(query)}`);
+  return json.data;
+}
+
+export async function createProduct(data) {
+  const json = await request("/products", {
+    method: "POST",
+    body:   JSON.stringify(data),
+  });
+  return json.data;
+}
+
+export async function updateProductById(id, data) {
+  const json = await request(`/products/${id}`, {
+    method: "PUT",
+    body:   JSON.stringify(data),
+  });
+  return json.data;
+}
+
+export async function deleteProductById(id) {
   return request(`/products/${id}`, { method: "DELETE" });
 }
 
-/** Fetch dashboard summary stats (total products, orders, revenue). */
-export function fetchStats() {
-  return request("/stats");
+// ─── Cart (auth required) ─────────────────────────────────────────────────────
+
+export async function fetchCart() {
+  const json = await request("/cart");
+  return json.data;
 }
 
-/* ------------------------------ Cart ------------------------------- */
-
-/** Fetch the current cart contents. */
-export function fetchCart() {
-  return request("/cart");
+export async function addToCart(productId, quantity = 1) {
+  const json = await request("/cart", {
+    method: "POST",
+    body:   JSON.stringify({ productId, quantity }),
+  });
+  return json.data;
 }
 
-/** Add an item to the cart. */
-export function addCartItem(item) {
-  return request("/cart", { method: "POST", body: JSON.stringify(item) });
+export async function updateCartItem(productId, quantity) {
+  const json = await request(`/cart/${productId}`, {
+    method: "PUT",
+    body:   JSON.stringify({ quantity }),
+  });
+  return json.data;
 }
 
-/** Update the quantity of a cart item (id = productId). */
-export function updateCartItem(productId, quantity) {
-  return request(`/cart/${productId}`, { method: "PUT", body: JSON.stringify({ quantity }) });
-}
-
-/** Remove an item from the cart (id = productId). */
-export function removeCartItem(productId) {
+export async function removeFromCart(productId) {
   return request(`/cart/${productId}`, { method: "DELETE" });
 }
 
-/* ---------------------------- Crafters ----------------------------- */
-
-/** Fetch products belonging to the logged-in crafter. */
-export function fetchCrafterProducts() {
-  return request("/crafters/products");
+export async function clearCart() {
+  return request("/cart/clear", { method: "DELETE" });
 }
 
-/** Crafter uploads a new product. */
-export function uploadCrafterProduct(data) {
-  return request("/crafters/products", { method: "POST", body: JSON.stringify(data) });
+// ─── Crafter (auth + CRAFTER role required) ───────────────────────────────────
+
+export async function fetchCrafterProducts() {
+  const json = await request("/crafters/products");
+  return json.data;
 }
 
-/* ------------------------------ Auth -------------------------------- */
-
-/** Dummy login — picks a role and returns a demo profile + token. */
-export function login(role) {
-  return request("/login", { method: "POST", body: JSON.stringify({ role }) });
+export async function uploadProduct(data) {
+  const json = await request("/crafters/products", {
+    method: "POST",
+    body:   JSON.stringify(data),
+  });
+  return json.data;
 }
 
-/** Fetch the dummy profile for a role. */
-export function fetchProfile(role) {
-  return request(`/profile?role=${encodeURIComponent(role)}`);
+export async function fetchCrafterOrders() {
+  const json = await request("/crafters/orders");
+  return json.data;
+}
+
+export async function fetchCrafterStats() {
+  const json = await request("/crafters/stats");
+  return json.data;
+}
+
+/**
+ * Legacy: kept so any code that still calls loginAs(role) gets a
+ * clear runtime message rather than a silent crash.
+ * @deprecated Use loginWithCredentials(email, password) instead.
+ */
+export function loginAs() {
+  console.warn("[api] loginAs() is deprecated. Use loginWithCredentials(email, password).");
+  return Promise.reject(new Error("Use loginWithCredentials(email, password) instead."));
 }

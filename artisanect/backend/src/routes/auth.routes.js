@@ -1,9 +1,15 @@
-import express from "express";
-import { login, getProfile } from "../controllers/auth.controller.js";
+import { Router } from "express";
+import { register, login, getMe, updateMe } from "../controllers/auth.controller.js";
+import { requireAuth } from "../middleware/auth.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
-router.post("/login", login);
-router.get("/profile", getProfile);
+// Public
+router.post("/register", register);
+router.post("/login",    login);
+
+// Protected — any logged-in user
+router.get("/me",  requireAuth, getMe);
+router.put("/me",  requireAuth, updateMe);
 
 export default router;

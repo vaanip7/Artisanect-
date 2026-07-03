@@ -1,50 +1,42 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { showSuccessToast } from "../components/ui/index.js";
+import { useAuth } from "./AuthContext.jsx";
 
 const WishlistContext = createContext(undefined);
-const STORAGE_KEY = "artisanect-wishlist";
 
-/**
- * WishlistProvider
- * Tracks wishlisted product ids, persisted to localStorage so the
- * wishlist survives a page refresh.
- *
- * @param {Object} props
- * @param {React.ReactNode} props.children
- * @returns {JSX.Element}
- */
+function storageKey(userId) {
+  return userId ? `artisanect-wishlist-${userId}` : "artisanect-wishlist-guest";
+}
+
 export function WishlistProvider({ children }) {
+  const { user } = useAuth();
+  const key = storageKey(user?.id);
+
   const [ids, setIds] = useState(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; }
   });
 
+  // When user changes (login/logout) reload the correct wishlist
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  }, [ids]);
+    try { setIds(JSON.parse(localStorage.getItem(storageKey(user?.id))) || []); } catch { setIds([]); }
+  }, [user?.id]);
 
-  /** Adds or removes a product id from the wishlist. */
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(ids));
+  }, [ids, key]);
+
   function toggleWishlist(product) {
-    setIds((prev) => {
-      const isWishlisted = prev.includes(product.id);
-      if (isWishlisted) {
+    setIds(prev => {
+      if (prev.includes(product.id)) {
         showSuccessToast(`${product.title} removed from wishlist`);
-        return prev.filter((id) => id !== product.id);
+        return prev.filter(id => id !== product.id);
       }
       showSuccessToast(`${product.title} added to wishlist`);
       return [...prev, product.id];
     });
   }
 
-  /** Whether a given product id is currently wishlisted. */
-  function isWishlisted(id) {
-    return ids.includes(id);
-  }
+  function isWishlisted(id) { return ids.includes(id); }
 
   return (
     <WishlistContext.Provider value={{ ids, toggleWishlist, isWishlisted }}>
@@ -53,15 +45,8 @@ export function WishlistProvider({ children }) {
   );
 }
 
-/**
- * useWishlist
- * Hook for accessing wishlist state and actions.
- * @returns {{ ids: number[], toggleWishlist: (product: object) => void, isWishlisted: (id: number) => boolean }}
- */
 export function useWishlist() {
-  const context = useContext(WishlistContext);
-  if (context === undefined) {
-    throw new Error("useWishlist must be used within a WishlistProvider");
-  }
-  return context;
+  const ctx = useContext(WishlistContext);
+  if (ctx === undefined) throw new Error("useWishlist must be inside WishlistProvider");
+  return ctx;
 }

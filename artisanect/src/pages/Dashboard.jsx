@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { Loader, showErrorToast } from "../components/ui/index.js";
-import { fetchStats } from "../services/api.js";
+import { fetchCrafterStats } from "../services/api.js";
 
 const statMeta = [
   {
@@ -57,7 +57,7 @@ function Dashboard() {
 
   useEffect(() => {
     let isMounted = true;
-    fetchStats()
+    fetchCrafterStats()
       .then((data) => {
         if (isMounted) setStats(data);
       })

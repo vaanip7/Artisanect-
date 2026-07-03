@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductCard from "./ProductCard.jsx";
 import { Loader, Input, showErrorToast } from "./ui/index.js";
 import { fetchProducts, fetchCategories, searchProducts } from "../services/api.js";
@@ -15,9 +16,10 @@ import { fetchProducts, fetchCategories, searchProducts } from "../services/api.
  * @returns {JSX.Element}
  */
 function ProductCatalog({ defaultFeaturedOnly = false }) {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState(searchParams.get("category") || "All");
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");

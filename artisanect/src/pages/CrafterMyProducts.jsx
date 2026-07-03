@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { Button, Input, Modal, Loader, showSuccessToast, showErrorToast } from "../components/ui/index.js";
-import { fetchCrafterProducts, updateProduct, deleteProduct } from "../services/api.js";
+import { fetchCrafterProducts, updateProductById, deleteProductById } from "../services/api.js";
 
 /**
  * CrafterMyProducts
@@ -40,7 +40,7 @@ function CrafterMyProducts() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      await updateProduct(editingProduct.id, {
+      await updateProductById(editingProduct.id, {
         title: editForm.title,
         price: Number(editForm.price),
         stock: Number(editForm.stock),
@@ -57,7 +57,7 @@ function CrafterMyProducts() {
 
   async function handleDelete(id) {
     try {
-      await deleteProduct(id);
+      await deleteProductById(id);
       showSuccessToast("Product deleted.");
       setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {

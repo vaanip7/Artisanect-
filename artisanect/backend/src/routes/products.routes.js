@@ -1,27 +1,26 @@
-import express from "express";
+import { Router } from "express";
 import {
-  listProducts,
-  listCategories,
-  searchProductsHandler,
-  getProduct,
-  addProduct,
-  editProduct,
-  removeProduct,
-  dashboardStats,
+  getProducts,
+  getCategories,
+  searchProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
 } from "../controllers/products.controller.js";
+import { requireAuth, requireRole } from "../middleware/auth.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
-// NOTE: literal sub-paths must be declared before /:id so Express doesn't
-// treat "search"/"categories" as an :id param.
-router.get("/products/search", searchProductsHandler);
-router.get("/products/categories", listCategories);
-router.get("/products", listProducts);
-router.get("/products/:id", getProduct);
-router.post("/products", addProduct);
-router.put("/products/:id", editProduct);
-router.delete("/products/:id", removeProduct);
+// Public read routes — no auth required
+router.get("/",              getProducts);
+router.get("/categories",    getCategories);
+router.get("/search",        searchProducts);
+router.get("/:id",           getProductById);
 
-router.get("/stats", dashboardStats);
+// Crafter-only write routes
+router.post("/",    requireAuth, requireRole("crafter"), createProduct);
+router.put("/:id",  requireAuth, requireRole("crafter"), updateProduct);
+router.delete("/:id", requireAuth, requireRole("crafter"), deleteProduct);
 
 export default router;

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { Button, Input, Loader, showSuccessToast, showErrorToast } from "../components/ui/index.js";
-import { uploadCrafterProduct } from "../services/api.js";
+import { uploadProduct } from "../services/api.js";
 
 const CATEGORIES = [
   "Painting",
@@ -63,7 +63,7 @@ function CrafterUploadProduct() {
 
     setIsSubmitting(true);
     try {
-      await uploadCrafterProduct({
+      await uploadProduct({
         title: form.title,
         category: form.category,
         description: form.description,

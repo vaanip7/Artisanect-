@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.jsx";
+import Landing from "./pages/Landing.jsx";
 import About from "./pages/About.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -39,7 +39,7 @@ function App() {
             <div className="min-h-screen flex flex-col bg-paper text-ink dark:bg-ink dark:text-paper font-body transition-colors duration-300">
               <Routes>
                 {/* Public */}
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Landing />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/shop" element={<Shop />} />
