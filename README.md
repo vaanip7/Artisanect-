@@ -96,6 +96,8 @@ Every relationship in Artisanect is a well-known FK relationship (crafter → pr
 ## Schema Diagram
 
 ```
+<img width="1160" height="788" alt="schema" src="https://github.com/user-attachments/assets/63a8bd05-4bb8-4465-b860-a285757f0066" />
+
 
 ```
 
