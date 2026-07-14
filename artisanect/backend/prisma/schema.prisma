@@ -1,13 +1,4 @@
-// Artisanect — Prisma schema (Week 5: PostgreSQL via Supabase)
-//
-// Why a relational schema:
-// Every relationship in this app has a fixed, well-known shape with a
-// required foreign key — a crafter owns many products (1-to-many), and a
-// customer's cart and wishlist are each a many-to-many between User and
-// Product with an extra attribute (quantity, on the cart). That's a
-// textbook case for a relational database with real foreign keys and
-// unique constraints, rather than a flexible/document-shaped store.
-// See README.md -> "Database choice" for the full reasoning.
+// Artisanect — Prisma schema (Week 6: added Google OAuth fields)
 
 generator client {
   provider = "prisma-client-js"
@@ -24,22 +15,18 @@ enum Role {
   CRAFTER
 }
 
-/// A registered account. Customers shop; crafters list and manage products.
-/// The same table serves both roles since the fields they need barely
-/// diverge (only `craft` is crafter-specific) — splitting into two tables
-/// would just mean duplicating name/email/password and adding a UNION
-/// every time we need "any logged-in user".
 model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
-  password  String
+  password  String?  // nullable — Google OAuth users have no password
+  googleId  String?  @unique // Google OAuth subject ID
   role      Role
-  craft     String? // crafter's primary craft/category, shown on their profile
+  craft     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products      Product[] // products this user has listed (only populated for CRAFTER accounts)
+  products      Product[]
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
 
@@ -47,8 +34,6 @@ model User {
   @@map("users")
 }
 
-/// A single handcrafted item in the catalog. Always belongs to exactly one
-/// crafter (User with role CRAFTER).
 model Product {
   id               Int      @id @default(autoincrement())
   title            String
@@ -57,8 +42,8 @@ model Product {
   price            Float
   rating           Float    @default(0)
   stock            Int      @default(0)
-  image            String // primary/cover image
-  images           String[] // gallery — full set including the cover image
+  image            String
+  images           String[]
   materials        String[]
   tags             String[]
   dimensions       String?
@@ -78,18 +63,14 @@ model Product {
   @@map("products")
 }
 
-/// One line item in a customer's cart. The (userId, productId) pair is
-/// unique so adding the same product twice just bumps the quantity instead
-/// of creating a duplicate row.
 model CartItem {
   id        Int      @id @default(autoincrement())
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId Int
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -97,15 +78,12 @@ model CartItem {
   @@map("cart_items")
 }
 
-/// A saved-for-later product. Same shape as CartItem minus quantity, since
-/// a product is either wishlisted or it isn't.
 model WishlistItem {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId Int
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 

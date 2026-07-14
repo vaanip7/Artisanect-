@@ -96,10 +96,43 @@ Every relationship in Artisanect is a well-known FK relationship (crafter → pr
 ## Schema Diagram
 
 ```
-<img width="1160" height="788" alt="schema" src="https://github.com/user-attachments/assets/63a8bd05-4bb8-4465-b860-a285757f0066" />
-
-
-![Schema Diagram](images/schema.jpeg)
+users
+├── id          TEXT PK
+├── name        TEXT
+├── email       TEXT UNIQUE
+├── password    TEXT (bcrypt hash)
+├── role        ENUM(CUSTOMER, CRAFTER)
+├── craft       TEXT?
+├── createdAt   TIMESTAMP
+└── updatedAt   TIMESTAMP
+        │
+        │ 1──────────────────────────────────────────* products
+        │                                              ├── id               SERIAL PK
+        │                                              ├── title            TEXT
+        │                                              ├── category         TEXT
+        │                                              ├── description      TEXT
+        │                                              ├── price            FLOAT
+        │                                              ├── rating           FLOAT
+        │                                              ├── stock            INT
+        │                                              ├── image            TEXT
+        │                                              ├── images           TEXT[]
+        │                                              ├── materials        TEXT[]
+        │                                              ├── tags             TEXT[]
+        │                                              ├── dimensions       TEXT?
+        │                                              ├── deliveryEstimate TEXT?
+        │                                              ├── featured         BOOLEAN
+        │                                              ├── crafterId        TEXT FK→users
+        │                                              ├── createdAt        TIMESTAMP
+        │                                              └── updatedAt        TIMESTAMP
+        │
+        │ 1──* cart_items               │ 1──* wishlist_items
+             ├── id         SERIAL PK        ├── id         SERIAL PK
+             ├── quantity   INT              ├── createdAt  TIMESTAMP
+             ├── userId     FK→users         ├── userId     FK→users
+             ├── productId  FK→products      └── productId  FK→products
+             ├── createdAt  TIMESTAMP        UNIQUE(userId, productId)
+             └── updatedAt  TIMESTAMP
+             UNIQUE(userId, productId)
 ```
 
 **Relationships:**

@@ -1,8 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import session from "express-session";
 
-import { prisma } from "./src/lib/prisma.js";
+import { prisma }      from "./src/lib/prisma.js";
+import passportConfig  from "./src/config/passport.js";
 import { notFoundHandler, errorHandler } from "./src/middleware/errorHandler.js";
 
 import authRoutes     from "./src/routes/auth.routes.js";
@@ -13,21 +15,52 @@ import craftersRoutes from "./src/routes/crafters.routes.js";
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
-// ─── Core middleware ───────────────────────────────────────────────────────────
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+// In development: allow localhost:5173
+// In production:  allow only FRONTEND_URL from .env
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, Postman, mobile apps)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed.`));
+    },
+    credentials: true,
+  })
+);
 
-// 10 MB limit to accommodate base64-encoded product images uploaded by crafters
+// ─── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
+// ─── Session (required by Passport even with JWT) ─────────────────────────────
+app.use(
+  session({
+    secret:            process.env.SESSION_SECRET || "artisanect_session_secret",
+    resave:            false,
+    saveUninitialized: false,
+    cookie: {
+      secure:   process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge:   24 * 60 * 60 * 1000, // 1 day
+    },
+  })
+);
 
+// ─── Passport ─────────────────────────────────────────────────────────────────
+app.use(passportConfig.initialize());
+app.use(passportConfig.session());
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) =>
-  res.json({ success: true, message: "Artisanect API is running. 🎨" })
+  res.json({ success: true, message: "Artisanect API v3 — Week 6 🎨" })
 );
 
 app.use("/api/auth",     authRoutes);
@@ -36,27 +69,22 @@ app.use("/api/cart",     cartRoutes);
 app.use("/api/crafters", craftersRoutes);
 
 // ─── Error handling ───────────────────────────────────────────────────────────
-
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
-
 async function start() {
   try {
-    // Quick connectivity check — $queryRaw does a round-trip to the DB and
-    // throws immediately if the connection string or credentials are wrong.
     await prisma.$queryRaw`SELECT 1`;
     console.log("✅  Database connected.");
   } catch (err) {
     console.error("❌  Database connection failed:", err.message);
-    console.error("    Make sure DATABASE_URL in backend/.env points to a running PostgreSQL instance");
-    console.error("    and that you have run:  npx prisma migrate deploy && npx prisma db seed");
     process.exit(1);
   }
 
   app.listen(PORT, () => {
-    console.log(`🚀  Artisanect backend listening on http://localhost:${PORT}`);
+    console.log(`🚀  Artisanect backend on http://localhost:${PORT}`);
+    console.log(`🔑  Google OAuth: http://localhost:${PORT}/api/auth/google`);
   });
 }
 

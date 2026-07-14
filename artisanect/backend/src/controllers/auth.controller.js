@@ -3,17 +3,13 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-/** Strip the password hash before sending any user object to the client. */
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
 function safeUser(user) {
-  const { password, ...rest } = user;
+  const { password, googleId, ...rest } = user;
   return rest;
 }
 
-/**
- * Sign a JWT for the given user.
- * Sub-claim carries the user's UUID so we can reload the user on every
- * authenticated request without embedding any mutable state in the token.
- */
 function signToken(user) {
   return jwt.sign(
     { sub: user.id, role: user.role },
@@ -22,46 +18,34 @@ function signToken(user) {
   );
 }
 
+// ─── POST /api/auth/register ──────────────────────────────────────────────────
+
 /**
- * POST /api/auth/register
- * Create a new customer or crafter account.
- *
- * Body: { name, email, password, role: "CUSTOMER"|"CRAFTER", craft? }
+ * Register a new user.
+ * Validation is handled upstream by express-validator (authValidation.js).
+ * Returns 201 on success, 400 if the email is already taken.
  */
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password, role, craft } = req.body;
 
-  if (!name || !email || !password || !role) {
-    return res.status(400).json({
-      success: false,
-      message: "name, email, password and role are all required.",
-    });
-  }
-
-  const validRoles = ["CUSTOMER", "CRAFTER"];
   const normalizedRole = String(role).toUpperCase();
-  if (!validRoles.includes(normalizedRole)) {
-    return res.status(400).json({
-      success: false,
-      message: `role must be one of: ${validRoles.join(", ")}.`,
-    });
-  }
 
-  if (password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: "password must be at least 6 characters.",
-    });
+  // Check duplicate email
+  const existing = await prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+  });
+  if (existing) {
+    return res.status(400).json({ success: false, message: "Email already exists." });
   }
 
   const hashed = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.create({
     data: {
-      name: String(name).trim(),
-      email: String(email).trim().toLowerCase(),
+      name:  String(name).trim(),
+      email: email.trim().toLowerCase(),
       password: hashed,
-      role: normalizedRole,
+      role:  normalizedRole,
       craft: craft ? String(craft).trim() : null,
     },
   });
@@ -70,43 +54,32 @@ export const register = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: "Account created successfully.",
-    data: { user: safeUser(user), token },
+    message: "User registered successfully.",
+    data:    { user: safeUser(user), token },
   });
 });
 
+// ─── POST /api/auth/login ─────────────────────────────────────────────────────
+
 /**
- * POST /api/auth/login
- * Authenticate with email + password. Returns a JWT and the user profile.
- *
- * Body: { email, password }
+ * Login with email + password.
+ * Returns a JWT on success, 401 on bad credentials.
  */
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "email and password are required.",
-    });
-  }
-
   const user = await prisma.user.findUnique({
-    where: { email: String(email).trim().toLowerCase() },
+    where: { email: email.trim().toLowerCase() },
   });
 
-  // Use a constant-time compare even on the "not found" path to prevent
-  // timing attacks that reveal whether an email address is registered.
-  const dummyHash = "$2a$12$invalidhashtopreventtimingattack";
-  const passwordMatch = user
+  // Constant-time comparison even when user doesn't exist
+  const dummyHash = "$2a$12$invalidhashtopreventtimingattacks000000000000000000000";
+  const passwordMatch = user && user.password
     ? await bcrypt.compare(password, user.password)
     : await bcrypt.compare(password, dummyHash).then(() => false);
 
   if (!user || !passwordMatch) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid email or password.",
-    });
+    return res.status(401).json({ success: false, message: "Invalid email or password." });
   }
 
   const token = signToken(user);
@@ -114,46 +87,60 @@ export const login = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: "Logged in successfully.",
-    data: { user: safeUser(user), token },
+    data:    { user: safeUser(user), token },
   });
 });
 
-/**
- * GET /api/auth/me
- * Return the profile of the currently authenticated user.
- * Requires: requireAuth middleware (sets req.user).
- */
+// ─── GET /api/auth/me ─────────────────────────────────────────────────────────
+
 export const getMe = asyncHandler(async (req, res) => {
-  res.json({
-    success: true,
-    data: { user: safeUser(req.user) },
-  });
+  res.json({ success: true, data: { user: safeUser(req.user) } });
 });
 
-/**
- * PUT /api/auth/me
- * Update the authenticated user's own profile (name, craft only —
- * password changes require a dedicated flow to prompt the old password).
- *
- * Body: { name?, craft? }
- */
+// ─── PUT /api/auth/me ─────────────────────────────────────────────────────────
+
 export const updateMe = asyncHandler(async (req, res) => {
   const { name, craft } = req.body;
   const data = {};
-  if (name) data.name = String(name).trim();
+  if (name)             data.name  = String(name).trim();
   if (craft !== undefined) data.craft = craft ? String(craft).trim() : null;
 
-  if (Object.keys(data).length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Provide at least one field to update (name, craft).",
-    });
+  if (!Object.keys(data).length) {
+    return res.status(400).json({ success: false, message: "Provide at least one field to update." });
   }
 
-  const updated = await prisma.user.update({
-    where: { id: req.user.id },
-    data,
+  const updated = await prisma.user.update({ where: { id: req.user.id }, data });
+  res.json({ success: true, data: { user: safeUser(updated) } });
+});
+
+// ─── Google OAuth callback ────────────────────────────────────────────────────
+
+/**
+ * GET /api/auth/google/callback  (called by Passport after Google consent)
+ *
+ * By the time this runs, passport.authenticate('google') has already:
+ *  - exchanged the code for a Google profile
+ *  - run our GoogleStrategy verify callback which found/created the user
+ *  - attached the user to req.user
+ *
+ * We sign a JWT and redirect to the frontend with it in the URL.
+ * The frontend reads it from the query string and stores it in localStorage.
+ */
+export const googleCallback = asyncHandler(async (req, res) => {
+  const user  = req.user;
+  const token = signToken(user);
+
+  const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+  // Pass the token and a minimal user summary as URL params so the
+  // React app can pick them up on the /auth/callback page.
+  const params = new URLSearchParams({
+    token,
+    id:    user.id,
+    name:  user.name,
+    email: user.email,
+    role:  user.role,
   });
 
-  res.json({ success: true, data: { user: safeUser(updated) } });
+  res.redirect(`${frontendURL}/auth/callback?${params.toString()}`);
 });
