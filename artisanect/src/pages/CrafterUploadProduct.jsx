@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { Button, Input, Loader, showSuccessToast, showErrorToast } from "../components/ui/index.js";
-import { uploadProduct } from "../services/api.js";
+import { uploadProduct, generateProductDescription } from "../services/api.js";
 
 const CATEGORIES = [
   "Painting",
@@ -22,6 +22,10 @@ const CATEGORIES = [
  * backend via `uploadCrafterProduct` so the product appears immediately
  * across the app (Home, Shop, My Products).
  *
+ * Also offers a "✨ Generate with AI" button that calls the Gemini-powered
+ * /api/ai/generate-description endpoint to draft a title, description, and
+ * selling highlights from the product name, category, material, price, and tags.
+ *
  * @returns {JSX.Element}
  */
 function CrafterUploadProduct() {
@@ -29,6 +33,7 @@ function CrafterUploadProduct() {
   const [form, setForm] = useState({
     title: "",
     category: CATEGORIES[0],
+    material: "",
     description: "",
     price: "",
     quantity: "",
@@ -37,6 +42,11 @@ function CrafterUploadProduct() {
   const [imagePreview, setImagePreview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // ─── AI description generation ────────────────────────────────────────────
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [aiHighlights, setAiHighlights] = useState([]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -52,6 +62,42 @@ function CrafterUploadProduct() {
     reader.readAsDataURL(file);
   }
 
+  async function handleGenerateWithAI() {
+    setAiError("");
+    const nextErrors = {};
+    if (!form.title.trim()) nextErrors.title = "Product name is required to generate copy.";
+    if (!form.material.trim()) nextErrors.material = "Material is required to generate copy.";
+    if (!form.price || Number(form.price) <= 0) nextErrors.price = "Enter a valid price to generate copy.";
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...nextErrors }));
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const result = await generateProductDescription({
+        name: form.title,
+        category: form.category,
+        material: form.material,
+        price: form.price,
+        tags: form.tags,
+      });
+      setForm((prev) => ({
+        ...prev,
+        title: result.title || prev.title,
+        description: result.description || prev.description,
+      }));
+      setAiHighlights(result.highlights || []);
+      showSuccessToast("AI generated your product copy — feel free to edit it.");
+    } catch (err) {
+      const message = err.message || "Could not generate AI copy right now.";
+      setAiError(message);
+      showErrorToast(message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const nextErrors = {};
@@ -61,16 +107,23 @@ function CrafterUploadProduct() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    // Fold AI-generated selling highlights into the description so they're
+    // preserved even though the product schema has no separate field for them.
+    const fullDescription = aiHighlights.length
+      ? `${form.description}\n\nHighlights:\n${aiHighlights.map((h) => `• ${h}`).join("\n")}`
+      : form.description;
+
     setIsSubmitting(true);
     try {
       await uploadProduct({
         title: form.title,
         category: form.category,
-        description: form.description,
+        description: fullDescription,
         price: Number(form.price),
         stock: Number(form.quantity),
         image: imagePreview || "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=800&q=80",
         artisanName: "Manoj Kumar",
+        materials: form.material ? [form.material.trim()] : [],
         tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
       });
       showSuccessToast("Product uploaded! It's now live in the catalog.");
@@ -116,6 +169,22 @@ function CrafterUploadProduct() {
               </select>
             </div>
 
+            <Input
+              label="Material"
+              name="material"
+              value={form.material}
+              onChange={handleChange}
+              error={errors.material}
+              placeholder="e.g. Terracotta clay, Reclaimed teak wood"
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Price (₹)" name="price" type="number" value={form.price} onChange={handleChange} error={errors.price} placeholder="999" />
+              <Input label="Quantity" name="quantity" type="number" value={form.quantity} onChange={handleChange} error={errors.quantity} placeholder="10" />
+            </div>
+
+            <Input label="Tags (comma-separated)" name="tags" value={form.tags} onChange={handleChange} placeholder="handmade, eco-friendly" />
+
             <div className="flex flex-col gap-1.5">
               <label htmlFor="description" className="text-sm font-medium text-ink dark:text-paper">
                 Description
@@ -131,12 +200,44 @@ function CrafterUploadProduct() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Price (₹)" name="price" type="number" value={form.price} onChange={handleChange} error={errors.price} placeholder="999" />
-              <Input label="Quantity" name="quantity" type="number" value={form.quantity} onChange={handleChange} error={errors.quantity} placeholder="10" />
-            </div>
+            {/* ✨ AI description generator */}
+            <div className="flex flex-col gap-2 rounded-lg border border-dashed border-gold/60 bg-gold/5 dark:bg-gold/10 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-ink/70 dark:text-paper/70">
+                  Fill in <span className="font-semibold">name, material, category and price</span> above, then let AI draft your listing.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateWithAI}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? <Loader size="sm" label="Generating..." /> : "✨ Generate with AI"}
+                </Button>
+              </div>
 
-            <Input label="Tags (comma-separated)" name="tags" value={form.tags} onChange={handleChange} placeholder="handmade, eco-friendly" />
+              {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+
+              {aiHighlights.length > 0 && (
+                <div className="flex flex-col gap-1 mt-1">
+                  <p className="text-xs font-semibold text-ink dark:text-paper">Selling highlights</p>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {aiHighlights.map((h, i) => (
+                      <li
+                        key={i}
+                        className="text-[11px] font-medium text-clay bg-clay/10 border border-clay/20 rounded-full px-2.5 py-1"
+                      >
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[11px] text-ink/50 dark:text-paper/50">
+                    These highlights will be added to your description on submit.
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="image" className="text-sm font-medium text-ink dark:text-paper">

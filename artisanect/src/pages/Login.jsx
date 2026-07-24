@@ -158,9 +158,7 @@ function Login() {
               <h2 className="font-display font-bold text-xl sm:text-2xl text-ink dark:text-paper">
                 Sign in to your account
               </h2>
-              <p className="text-sm text-ink/55 dark:text-paper/55 mt-1">
-                Click a card to auto-fill demo credentials, then hit <strong>Login</strong>.
-              </p>
+              
             </div>
 
             {/* Two role quick-login cards */}
@@ -330,9 +328,7 @@ function Login() {
                   <a href="/register" className="text-clay font-semibold hover:underline">Create one free</a>
                 </p>
 
-                <p className="text-center text-xs text-ink/40 dark:text-paper/40 mt-2">
-                  Demo app — click a role card above to auto-fill credentials.
-                </p>
+                
               </div>
             </div>
 

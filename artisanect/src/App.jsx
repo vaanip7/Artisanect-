@@ -15,6 +15,7 @@ import Dashboard             from "./pages/Dashboard.jsx";
 import CrafterUploadProduct  from "./pages/CrafterUploadProduct.jsx";
 import CrafterMyProducts     from "./pages/CrafterMyProducts.jsx";
 import CrafterOrders         from "./pages/CrafterOrders.jsx";
+import AIChat                from "./pages/AIChat.jsx";
 import ComponentsDemo        from "./pages/ComponentsDemo.jsx";
 
 import ProtectedRoute        from "./components/ProtectedRoute.jsx";
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/auth/callback"  element={<AuthCallback />} />
                 <Route path="/shop"           element={<Shop />} />
                 <Route path="/product/:id"    element={<ProductDetails />} />
+                <Route path="/ai-chat"        element={<AIChat />} />
                 <Route path="/components-demo" element={<ComponentsDemo />} />
 
                 {/* ── Requires any authenticated user ──────────────────────── */}

@@ -8,11 +8,13 @@ const guestLinks = [
   { name: "Home",  path: "/" },
   { name: "About", path: "/about" },
   { name: "Shop",  path: "/shop" },
+  { name: "AI Chat", path: "/ai-chat" },
 ];
 
 const customerLinks = [
   { name: "Home",     path: "/" },
   { name: "Shop",     path: "/shop" },
+  { name: "AI Chat",  path: "/ai-chat" },
   { name: "Cart",     path: "/cart" },
   { name: "Wishlist", path: "/wishlist" },
   { name: "Profile",  path: "/profile" },
@@ -22,6 +24,7 @@ const crafterLinks = [
   { name: "Dashboard",      path: "/dashboard" },
   { name: "Upload Product", path: "/crafter/upload" },
   { name: "My Products",    path: "/crafter/products" },
+  { name: "AI Chat",        path: "/ai-chat" },
   { name: "Orders",         path: "/crafter/orders" },
   { name: "Profile",        path: "/profile" },
 ];

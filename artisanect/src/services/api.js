@@ -197,3 +197,53 @@ export function loginAs() {
   console.warn("[api] loginAs() is deprecated. Use loginWithCredentials(email, password).");
   return Promise.reject(new Error("Use loginWithCredentials(email, password) instead."));
 }
+
+// ─── AI (Gemini-powered) ───────────────────────────────────────────────────────
+
+/**
+ * Generate a professional title, description, and selling highlights for a
+ * product listing from a few structured inputs.
+ * Requires an authenticated crafter (same auth header handling as everything
+ * else in this file — see `authHeaders()`).
+ *
+ * @param {{ name: string, category: string, material: string, price: string|number, tags?: string }} input
+ * @returns {Promise<{ title: string, description: string, highlights: string[] }>}
+ */
+export async function generateProductDescription(input) {
+  const json = await request("/ai/generate-description", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return json.data;
+}
+
+/**
+ * Send a message to the ArtisanAI chat assistant.
+ *
+ * @param {string} message - the new message from the user
+ * @param {{role: "user"|"assistant", content: string}[]} [history] - prior turns in this session
+ * @returns {Promise<string>} the assistant's reply
+ */
+export async function sendAIChatMessage(message, history = []) {
+  const json = await request("/ai/chat", {
+    method: "POST",
+    body: JSON.stringify({ message, history }),
+  });
+  return json.data.reply;
+}
+
+/**
+ * Natural-language product search — e.g. "gift under 500", "eco friendly decor".
+ * The backend uses Gemini to extract keywords/price intent, then queries the
+ * same product database as the regular keyword search.
+ *
+ * @param {string} query
+ * @returns {Promise<Array>} matching products, same shape as fetchProducts()/searchProducts()
+ */
+export async function aiSearchProducts(query) {
+  const json = await request("/ai/search", {
+    method: "POST",
+    body: JSON.stringify({ query }),
+  });
+  return json.data;
+}
